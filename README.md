@@ -1,19 +1,20 @@
 # Ship
 
-Thank you for purchasing Ship! Ship is a high-performance client area for the Pterodactyl Panel that allows your users to create, manage and upgrade their servers through an intuitive interface.
+![showcase](https://builtbybit.com/attachments/bildschirmfoto-2024-12-28-um-00-25-34-png.864348/?variant=display)
+
+Ship is a high-performance client area for the Pterodactyl Panel that allows your users to create, manage and upgrade their servers through an intuitive interface. It was previously sold on Builtbybit, I now decided to make it open source.
 
 
 ## Quick Start Guide
 
-Getting started with Ship is easy:
-
 1. Configure the `config.toml` file & customise the dashboard.
-2. Set up your SSL certificates and NGINX reverse proxy (Open a ticket in our Discord server if you need help)
-3. Start Ship using `npm run start` and you're ready to go!
+2. Set up your SSL certificates and NGINX reverse proxy
+3. Install all dependencies using `npm i`
+4. Start it using `npm run start` and you're ready to go!
+
+## Documentation
+https://ship-docs.pages.dev
 
 
 ## Need Help?
-
-Join our Discord community at **discord.gg/shipping** for support and updates. 
-
-For direct assistance, please open a ticket in our Discord server and our team will help you get started.
+As I made this open source, I don't provide support for this anymore. Please use the Documentation.

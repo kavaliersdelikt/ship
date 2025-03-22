@@ -1,0 +1,432 @@
+<%- include('../components/layout') %>
+<style>
+    .backup-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .backup-card {
+        background: #0f0f13;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .backup-card:hover {
+        border-color: rgba(139, 92, 246, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .backup-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .backup-icon {
+        background: rgba(139, 92, 246, 0.1);
+        color: rgb(139, 92, 246);
+        padding: 0.75rem;
+        border-radius: 0.75rem;
+    }
+
+    .backup-name {
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .backup-meta {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin: 1rem 0;
+    }
+
+    .meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .meta-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+
+    .meta-value {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+    }
+
+    .backup-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .action-btn {
+        flex: 1;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-download {
+        background: #1f1f29;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .btn-download:hover {
+        background: #2a2a38;
+    }
+
+    .btn-delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: rgb(239, 68, 68);
+    }
+
+    .btn-delete:hover {
+        background: rgba(239, 68, 68, 0.2);
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.75);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(4px);
+        z-index: 50;
+    }
+
+    .modal-content {
+        background-color: #0f0f13;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        padding: 2rem;
+        border-radius: 1rem;
+        max-width: 90%;
+        max-height: 90%;
+        overflow: auto;
+        transform: scale(0.95);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .modal-overlay.active .modal-content {
+        transform: scale(1);
+        opacity: 1;
+    }
+</style>
+
+<main class="flex-grow container mx-auto px-4 py-8">
+    
+
+    <%- include('../components/server') %>
+
+    <div class="bg-[#0f0f13] rounded-xl p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-white">Backups</h2>
+            <button id="create-backup" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-all hover:scale-95">
+                Create Backup
+            </button>
+        </div>
+        <div id="backup-list" class="backup-grid">
+            
+        </div>
+    </div>
+</main>
+
+
+<div id="confirm-delete-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 class="text-xl font-semibold mb-4 text-white">Confirm Delete</h3>
+        <p class="mb-6 text-gray-300">Are you sure you want to delete this backup? This action cannot be undone.</p>
+        <div class="flex justify-end gap-3">
+            <button id="cancel-delete" class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition">Cancel</button>
+            <button id="confirm-delete" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const serverId = new URLSearchParams(window.location.search).get('id');
+    let backupToDelete = null;
+
+    function showLoader(elementId) {
+        const element = document.getElementById(elementId);
+        element.innerHTML = `<svg class="animate-spin h-8 w-8 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>`;
+    }
+
+    function hideLoader(elementId) {
+        const element = document.getElementById(elementId);
+        element.innerHTML = '';
+    }
+
+    function loadBackupList() {
+        showLoader('backup-list');
+        fetch(`/api/server/${serverId}/backups`)
+            .then(response => response.json())
+            .then(data => {
+                const backupList = document.getElementById('backup-list');
+                backupList.innerHTML = '';
+                
+                if (!data.data || data.data.length === 0) {
+                    backupList.innerHTML = `
+                        <div class="text-center py-8 col-span-full">
+                            <div class="w-16 h-16 mx-auto mb-4 bg-purple-900/50 rounded-full flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 text-purple-300">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3.75h3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-medium text-white mb-2">No Backups Found</h3>
+                            <p class="text-purple-200/60">Create your first backup to protect your server data</p>
+                        </div>
+                    `;
+                } else {
+                    data.data.forEach(backup => {
+                        const backupItem = createBackupItem(backup);
+                        backupList.appendChild(backupItem);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error loading backups:', error);
+                const backupList = document.getElementById('backup-list');
+                backupList.innerHTML = `
+                    <div class="text-center py-8 col-span-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 mx-auto text-red-600 mb-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                        </svg>
+                        <h3 class="text-lg font-medium text-red-400 mb-2">Failed to Load Backups</h3>
+                        <p class="text-gray-500">Please try refreshing the page</p>
+                    </div>
+                `;
+            });
+    }
+
+    function createBackupItem(backup) {
+        const item = document.createElement('div');
+        item.className = 'backup-card';
+        const createdDate = new Date(backup.attributes.created_at).toLocaleString();
+        const completedDate = backup.attributes.completed_at ? new Date(backup.attributes.completed_at).toLocaleString() : 'In progress';
+
+        item.innerHTML = `
+            <div class="backup-header">
+                <div class="backup-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" />
+                    </svg>
+                </div>
+                <span class="backup-name">${backup.attributes.name}</span>
+            </div>
+            <div class="backup-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Size</span>
+                    <span class="meta-value">${formatBytes(backup.attributes.bytes)}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Created</span>
+                    <span class="meta-value">${createdDate}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Status</span>
+                    <span class="meta-value">${backup.attributes.completed_at ? 'Completed' : 'In Progress'}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Completed</span>
+                    <span class="meta-value">${completedDate}</span>
+                </div>
+            </div>
+            <div class="backup-actions">
+                <button class="action-btn btn-download download-backup" data-uuid="${backup.attributes.uuid}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download
+                </button>
+                <button class="action-btn btn-delete delete-backup" data-uuid="${backup.attributes.uuid}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete
+                </button>
+            </div>
+        `;
+
+        const downloadButton = item.querySelector('.download-backup');
+        downloadButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            downloadBackup(backup.attributes.uuid);
+        });
+
+        const deleteButton = item.querySelector('.delete-backup');
+        deleteButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showDeleteConfirmation(backup.attributes.uuid);
+        });
+
+        return item;
+    }
+
+    function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    function downloadBackup(backupUuid) {
+        fetch(`/api/server/${serverId}/backups/${backupUuid}/download`)
+            .then(response => response.json())
+            .then(data => {
+                window.open(data.attributes.url, '_blank');
+            })
+            .catch(error => {
+                console.error('Error downloading backup:', error);
+                alert('An error occurred while generating the download link. Please try again.');
+            });
+    }
+
+    function showDeleteConfirmation(backupUuid) {
+        backupToDelete = backupUuid;
+        document.getElementById('confirm-delete-modal').classList.add('active');
+    }
+
+    function deleteBackup() {
+        if (!backupToDelete) return;
+
+        fetch(`/api/server/${serverId}/backups/${backupToDelete}`, {
+            method: 'DELETE'
+        })
+        .then(() => {
+            loadBackupList();
+            closeModal('confirm-delete-modal');
+        })
+        .catch(error => {
+            console.error('Error deleting backup:', error);
+            alert('An error occurred while deleting the backup. Please try again.');
+        })
+        .finally(() => {
+            backupToDelete = null;
+        });
+    }
+
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        modal.classList.remove('active');
+    }
+
+    document.getElementById('create-backup').addEventListener('click', async () => {
+        const button = document.getElementById('create-backup');
+        const originalText = button.innerHTML;
+        
+        try {
+            button.disabled = true;
+            button.innerHTML = `
+                <svg class="animate-spin h-5 w-5 inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creating Backup...
+            `;
+
+            const response = await fetch(`/api/server/${serverId}/backups`, {
+                method: 'POST'
+            });
+
+            if (!response.ok) {
+                throw new Error('Backup creation failed');
+            }
+
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg fade-in';
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    Backup creation started
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.add('fade-out');
+                setTimeout(() => notification.remove(), 500);
+            }, 5000);
+
+            loadBackupList();
+            await response.json();
+
+        } catch (error) {
+            console.error('Error creating backup:', error);
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg fade-in';
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                    Failed to create backup
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.add('fade-out');
+                setTimeout(() => notification.remove(), 500);
+            }, 5000);
+
+        } finally {
+            setTimeout(() => {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }, 1000);
+        }
+    });
+
+    document.getElementById('cancel-delete').addEventListener('click', () => {
+        closeModal('confirm-delete-modal');
+        backupToDelete = null;
+    });
+
+    document.getElementById('confirm-delete').addEventListener('click', deleteBackup);
+
+    fetch(`/api/server/${serverId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('server-name').textContent = data.attributes.name;
+            document.getElementById('server-name-breadcrumb').textContent = data.attributes.name;
+            document.getElementById('server-description').textContent = data.attributes.description || "No description set.";
+        });
+
+    loadBackupList();
+</script>
+<%- include('../components/page-scripts') %>

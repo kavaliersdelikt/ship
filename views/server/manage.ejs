@@ -1,0 +1,976 @@
+<%- include('../components/layout') %>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+<% if (req.query.mode == "rdp") { %>
+<script>
+window.location.href = "/server/rdp?id=<%=req.query.id%>&numeric=<%=req.query.numeric%>&mode=rdp"
+</script>
+<% } %>
+<style>
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 2px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.8);
+  }
+
+  #console-output {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: #e2e2e2;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    margin: 1rem 0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    max-height: 650px;
+    overflow: auto;
+  }
+
+  .console-line {
+    padding: 0.5rem 0.75rem;
+    margin: 0.25rem 0;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .console-line:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(4px);
+  }
+
+  .console-line-content {
+    flex: 1;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .console-line-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.7rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
+  }
+
+  .console-line:hover .console-line-info {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .copy-icon, .tick-icon {
+    cursor: pointer;
+    display: none;
+    width: 12px;
+    height: 12px;
+  }
+
+  .internal-icon {
+    margin-right: 2px;
+    color: #fbbf24;
+    width: 12px;
+    height: 12px;
+  }
+
+  #console-output::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  #console-output::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  #console-output::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .slide-in {
+    animation: slideIn 0.1s ease-out forwards;
+  }
+
+  .transition-all {
+    transition: all 0.3s ease;
+  }
+
+  .hover-scale {
+    transition: transform 0.2s ease;
+  }
+
+  .card {
+    background-color: rgba(0, 0, 0, 0.7);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .card:hover {
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+  }
+
+  .loading-spinner {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top: 3px solid #fff;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .fade-out {
+    animation: fadeOut 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+</style>
+
+<main class="flex-grow container mx-auto px-4 py-8 transition-all">
+    
+
+    <%- include('../components/server') %>
+
+<% if (req.query.mode == "vm") { %>
+
+
+<% } %>
+
+    <div id="alert-container" class="mb-4 space-y-2"></div>
+
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div class="lg:col-span-3 space-y-6">
+            
+            <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-indigo-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
+                        </svg>
+                        <div>
+                            <h2 class="text-lg font-medium text-white">Terminal</h2>
+                            <p class="text-white/50 text-xs">Access your server's command line interface</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="console-output" class="bg-black/30 rounded-lg border border-white/10 h-[400px] overflow-y-auto font-mono text-sm p-4 mb-3">
+                </div>
+
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <input type="text" id="console-input" class="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-white/30 focus:outline-none focus:border-indigo-500/50" placeholder="Enter a command...">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-white/30">
+                            <kbd class="text-xs">Enter ↵</kbd>
+                        </div>
+                    </div>
+                    <button id="send-command" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 rounded-lg transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        
+        <div class="lg:w-96 space-y-4">
+            
+            <div class="grid grid-cols-3 gap-2">
+                <button id="start-server" class="h-8 hover:scale-95 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-medium" title="Start Server">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 mr-1.5">
+                        <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
+                    </svg>
+                    Start
+                </button>
+
+                <button id="stop-server" class="h-8 hover:scale-95 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-medium" title="Stop Server">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 mr-1.5">
+                        <path fill-rule="evenodd" d="M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z" clip-rule="evenodd" />
+                    </svg>
+                    Stop
+                </button>
+
+                <button id="restart-server" class="h-8 hover:scale-95 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-medium" title="Restart Server">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 mr-1.5">
+                        <path fill-rule="evenodd" d="M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67a.75.75 0 1 0 1.45.388Zm15.408 3.352a.75.75 0 0 0-.919.53 7.5 7.5 0 0 1-12.548 3.364l-1.902-1.903h3.183a.75.75 0 0 0 0-1.5H2.984a.75.75 0 0 0-.75.75v4.992a.75.75 0 0 0 1.5 0v-3.18l1.9 1.9a9 9 0 0 0 15.059-4.035.75.75 0 0 0-.53-.918Z" clip-rule="evenodd" />
+                    </svg>
+                    Restart
+                </button>
+            </div>
+
+            
+            <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-lg font-semibold text-white" id="server-name-card">Loading...</h2>
+                        <span id="server-status" class="px-3 py-1 rounded-full text-xs font-medium">Loading...</span>
+                    </div>
+                </div>
+
+                
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center text-white/60">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-4 w-4 mr-2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 0 1-3-3m3 3a3 3 0 1 0 0 6h13.5a3 3 0 1 0 0-6m-16.5-3a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3m-19.5 0a4.5 4.5 0 0 1 .9-2.7L5.737 5.1a3.375 3.375 0 0 1 2.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 0 1 .9 2.7m0 0a3 3 0 0 1-3 3m0 3h.008v.008h-.008v-.008Zm0-6h.008v.008h-.008v-.008Zm-3 6h.008v.008h-.008v-.008Zm0-6h.008v.008h-.008v-.008Z" />
+                            </svg>
+                            Node Location
+                        </div>
+                        <span id="node" class="text-white">Unknown</span>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center text-white/60">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-4 w-4 mr-2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+                            </svg>
+                            IP Address
+                        </div>
+                        <span id="ip" class="text-white">Unknown</span>
+                    </div>
+
+                    
+                    <div class="border-t border-white/10 pt-4 space-y-4">
+                        
+                        <div>
+                            <div class="flex items-center justify-between text-white/60 mb-1.5">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                                    </svg>
+                                    CPU Usage
+                                </div>
+                                <span id="cpu-usage-card" class="text-white">0%</span>
+                            </div>
+                            <div class="h-1.5 bg-white/10 rounded-full">
+                                <div class="bg-indigo-500 h-1.5 rounded-full transition-all" id="cpu-usage-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        
+                        <div>
+                            <div class="flex items-center justify-between text-white/60 mb-1.5">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                    </svg>
+                                    Memory
+                                </div>
+                                <span id="ram-usage-card" class="text-white"><span id="ram-usage-card2">0 MB</span> / <span id="ram-limit-card">0 MB</span></span>
+                            </div>
+                            <div class="h-1.5 bg-white/10 rounded-full">
+                                <div class="bg-indigo-500 h-1.5 rounded-full transition-all" id="ram-usage-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        
+                        <div>
+                            <div class="flex items-center justify-between text-white/60 mb-1.5">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                    </svg>
+                                    Storage
+                                </div>
+                                <span id="disk-usage-card" class="text-white"><span id="disk-usage-card2">0 MB</span> / <span id="disk-limit-card">0 MB</span></span>
+                            </div>
+                            <div class="h-1.5 bg-white/10 rounded-full">
+                                <div class="bg-indigo-500 h-1.5 rounded-full transition-all" id="disk-usage-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        
+                        <div>
+                            <div class="flex items-center justify-between text-white/60 mb-1.5">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-4 w-4 mr-2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                                    </svg>
+                                    Network
+                                </div>
+                                <span id="network-usage" class="text-white">0 B/s</span>
+                            </div>
+                            <div class="h-1.5 bg-white/10 rounded-full">
+                                <div class="bg-indigo-500 h-1.5 rounded-full transition-all" id="network-usage-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+           
+        </div>
+    </div>
+</main>
+
+<script>
+const serverId = new URLSearchParams(window.location.search).get('id');
+let socket;
+let serverStatus = 'offline';
+let retryCount = 0;
+const maxRetries = 5;
+const retryDelay = 5000; 
+let isMinecraft = false;
+let randomId = () => Math.random().toString(36).substring(2, 8);
+
+function showLoading(elementId) {
+    const element = document.getElementById(elementId);
+    element.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+}
+
+function hideLoading(elementId) {
+    const element = document.getElementById(elementId);
+    element.innerHTML = '';
+}
+
+function showAlert(type, title, message) {
+    const alertContainer = document.getElementById('alert-container');
+    const alertElement = document.createElement('div');
+    const actionId = Math.random().toString(36).substring(2, 8);
+    
+    alertElement.className = 'my-4 rounded-xl border shadow-lg backdrop-blur-sm transition-all duration-300';
+    
+    if (type === 'error') {
+        alertElement.classList.add('border-rose-500/20', 'bg-rose-500/10');
+        alertElement.innerHTML = `
+            <div class="flex p-4 items-start space-x-4">
+                <div class="shrink-0 p-1.5 bg-rose-500/20 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
+                <div class="flex-1 pt-0.5">
+                    <h3 class="text-rose-400 font-medium mb-1">${title}</h3>
+                    <p class="text-rose-300/80 text-sm">${message}</p>
+                    <div class="mt-3 flex items-center gap-2">
+                        <span class="px-2 py-1 text-[10px] font-medium bg-rose-500/20 text-rose-400 rounded-md">${actionId}</span>
+                        <span class="text-[10px] text-rose-400/60">Click to dismiss</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        alertElement.classList.add('border-amber-500/20', 'bg-amber-500/10');
+        alertElement.innerHTML = `
+            <div class="flex p-4 items-start space-x-4">
+                <div class="shrink-0 p-1.5 bg-amber-500/20 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="flex-1 pt-0.5">
+                    <h3 class="text-amber-400 font-medium mb-1">${title}</h3>
+                    <p class="text-amber-300/80 text-sm">${message}</p>
+                    <div class="mt-3 flex items-center gap-2">
+                        <span class="px-2 py-1 text-[10px] font-medium bg-amber-500/20 text-amber-400 rounded-md">${actionId}</span>
+                        <span class="text-[10px] text-amber-400/60">Click to dismiss</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    alertElement.addEventListener('mouseover', () => {
+        alertElement.style.transform = 'translateY(-2px) scale(1.01)';
+        alertElement.style.backdropFilter = 'blur(12px)';
+    });
+    
+    alertElement.addEventListener('mouseout', () => {
+        alertElement.style.transform = 'translateY(0) scale(1)';
+        alertElement.style.backdropFilter = 'blur(8px)';
+    });
+
+    alertElement.addEventListener('click', () => {
+        alertElement.style.animation = 'fadeOutRight 0.5s ease forwards';
+        setTimeout(() => alertContainer.removeChild(alertElement), 500);
+    });
+
+    alertContainer.appendChild(alertElement);
+    alertElement.style.animation = 'fadeInLeft 0.5s ease forwards';
+
+    setTimeout(() => {
+        if (alertElement.parentNode) {
+            alertElement.style.animation = 'fadeOutRight 0.5s ease forwards';
+            setTimeout(() => alertContainer.removeChild(alertElement), 500);
+        }
+    }, 7000);
+}
+
+if (!document.querySelector('#alert-animations')) {
+    const style = document.createElement('style');
+    style.id = 'alert-animations';
+    style.textContent = `
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes fadeOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function fetchServerDetails() {
+    fetch(`/api/server/${serverId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('server-name-card').textContent = data.attributes.name;
+            document.getElementById('node').textContent = data.attributes.node;
+            document.getElementById('ram-limit-card').textContent = `${data.attributes.limits.memory/1024} GiB`;
+            document.getElementById('disk-limit-card').textContent = `${data.attributes.limits.disk/1024} GiB`;
+
+            const defaultAllocation = data.attributes.relationships.allocations.data.find(allocation => allocation.attributes.is_default);
+            if (defaultAllocation) {
+                document.getElementById('ip').textContent = `${defaultAllocation.attributes.ip_alias}:${defaultAllocation.attributes.port}`;
+            }
+
+            if (data.attributes.is_installing) {
+                showAlert('warning', 'Server Provisioning', 'This server is currently provisioning. Some features (such as the console) may be unavailable.');
+            }
+            if (data.attributes.is_suspended) {
+                showAlert('error', 'Server Suspended', 'If you think this was an error, please contact support!');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching server details:', error);
+            showAlert('error', 'Error', 'Failed to load server details. Please try refreshing the page.');
+        })
+        .finally(() => {
+        });
+}
+
+function connectWebSocket() {
+    fetch(`/api/server/${serverId}/websocket`)
+        .then(response => response.json())
+        .then(data => {
+            socket = new WebSocket(data.data.socket);
+
+            socket.onopen = () => {
+                console.log('WebSocket connected');
+                retryCount = 0;
+                socket.send(JSON.stringify({ event: 'auth', args: [data.data.token] }));
+                const alertContainer = document.getElementById('alert-container');
+                const connectionAlert = alertContainer.querySelector('.connection-alert');
+                if (connectionAlert) {
+                    alertContainer.removeChild(connectionAlert);
+                }
+            };
+
+            socket.onclose = (event) => {
+                console.log('WebSocket disconnected');
+                if (retryCount < maxRetries) {
+                    retryCount++;
+                    showAlert('warning', 'Connection Lost', `Attempting to reconnect... (${retryCount}/${maxRetries})`);
+                    setTimeout(connectWebSocket, retryDelay);
+                } else {
+                    showAlert('error', 'Connection Failed', 'Unable to connect after multiple attempts. Please refresh the page.');
+                }
+            };
+
+            socket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            socket.onmessage = handleWebSocketMessage;
+        })
+        .catch(error => {
+            console.error('Error fetching WebSocket credentials:', error);
+            showAlert('error', 'Connection Error', 'Failed to establish connection. Please try refreshing the page.');
+        });
+}
+
+function handleWebSocketMessage(event) {
+    const message = JSON.parse(event.data);
+    
+    switch (message.event) {
+        case 'auth success':
+            console.log('WebSocket authenticated successfully');
+            socket.send(JSON.stringify({ event: 'send logs', args: [null] }));
+            socket.send(JSON.stringify({ event: 'send stats', args: [null] }));
+            
+            break;
+        case 'console output':
+            appendToConsole(message.args[0]);
+            handleMinecraftOutput(message.args[0]);
+      if (message.args[0].includes("You need to agree to the EULA")) {
+        showEulaPopup();
+      }
+
+            break;
+        case 'transfer logs':
+            appendToConsole(message.args[0]);
+            break;
+        case 'stats':
+            updateStats(JSON.parse(message.args[0]));
+            break;
+        case 'status':
+            updateServerStatus(message.args[0]);
+            displayStatusUpdate(message.args[0]);
+            break;
+        case 'daemon error':
+            showAlert('error', 'Daemon Error', message.args[0]);
+            break;
+    }
+}
+
+function displayStatusUpdate(status) {
+    let statusColor;
+    switch (status) {
+        case 'running':
+            statusColor = '#a1a1a1';
+            break;
+        case 'stopping':
+        case 'starting':
+            statusColor = '#a1a1a1';
+            break;
+        case 'offline':
+            statusColor = '#a1a1a1';
+            break;
+        default:
+            statusColor = '#a1a1a1';
+    }
+    
+    const statusMessage = `Your server's status is now: ${(status.replace('offline', 'powered off')).replace('running', 'powered on')}`;
+    appendToConsole(statusMessage, true);
+}
+
+function appendToConsole(message, isInternal = false) {
+    const consoleOutput = document.getElementById('console-output');
+    
+    message = message.replace(/Pterodactyl/g, "ship").replace(/pterodactyl/g, "ship.compute.edge_" + randomId());
+
+    const friendlyMessages = {
+        "Checking server disk space usage, this could take a few seconds...": 
+            "<span style=\"color: #a1a1a1\">></span> Performing container disk usage checks...",
+        "Updating process configuration files...": 
+            "<span style=\"color: #a1a1a1\">></span> Updating environment...",
+        "Ensuring file permissions are set correctly, this could take a few seconds...": 
+            "<span style=\"color: #a1a1a1\">></span> Performing file permission checks...",
+        "Pulling Docker container image, this could take a few minutes to complete...": 
+            "<span style=\"color: #a1a1a1\">></span> Fetching Docker image...",
+        "Finished pulling Docker container image": 
+            "<span style=\"color: #a1a1a1\">></span> Completed Docker image pull!"
+    };
+
+    for (let [original, friendly] of Object.entries(friendlyMessages)) {
+        if (message.includes(original)) {
+            message = friendly;
+            break;
+        }
+    }
+
+    const logElement = createConsoleLogElement(message, isInternal);
+    consoleOutput.appendChild(logElement);
+
+    smoothScrollConsole();
+}
+
+function createConsoleLogElement(message, isInternal = false) {
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString();
+    
+    const logElement = document.createElement('div');
+    logElement.className = 'console-line slide-in';
+    
+    const contentElement = document.createElement('span');
+    contentElement.className = 'console-line-content';
+    contentElement.innerHTML = formatConsoleOutput(message);
+    
+    const infoElement = document.createElement('span');
+    infoElement.className = 'console-line-info';
+    infoElement.innerHTML = `
+        ${isInternal ? '<svg class="internal-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>' : ''}
+        <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+        </svg>
+        <span class="timestamp">${timestamp}</span>
+    `;
+    
+    logElement.appendChild(contentElement);
+    logElement.appendChild(infoElement);
+    
+    return logElement;
+}
+
+function formatConsoleOutput(text) {
+    text = text.replace(/\[(\?2004)[hl]/g, ''); 
+    
+    const styles = {
+        '0': 'all: initial;', 
+        '1': 'font-weight: 700;', 
+        '2': 'filter: brightness(80%);',
+        '3': 'font-style: italic;',
+        '4': 'text-decoration: underline;',
+        '9': 'text-decoration: line-through;',
+        // base
+        '30': 'color: var(--console-gray, #6b7280);',
+        '31': 'color: var(--console-red, #dc2626);',
+        '32': 'color: var(--console-green, #16a34a);', 
+        '33': 'color: var(--console-yellow, #ca8a04);',
+        '34': 'color: var(--console-blue, #2563eb);',
+        '35': 'color: var(--console-purple, #9333ea);',
+        '36': 'color: var(--console-cyan, #0891b2);',
+        '37': 'color: var(--console-white, #f1f5f9);',
+        '39': 'color: currentColor;',
+        // bright
+        '90': 'color: var(--console-bright-gray, #9ca3af);',
+        '91': 'color: var(--console-bright-red, #ef4444);',
+        '92': 'color: var(--console-bright-green, #22c55e);',
+        '93': 'color: var(--console-bright-yellow, #eab308);', 
+        '94': 'color: var(--console-bright-blue, #3b82f6);',
+        '95': 'color: var(--console-bright-purple, #a855f7);',
+        '96': 'color: var(--console-bright-cyan, #06b6d4);',
+        '97': 'color: var(--console-bright-white, #f8fafc);'
+    };
+
+    text = text.replace(/\u001b\[([0-9;]+)m/g, (match, codes) => {
+        const combinedStyles = codes.split(';')
+            .map(code => styles[code])
+            .filter(Boolean)
+            .join(' ');
+            
+        return combinedStyles ? `</span><span style="${combinedStyles}">` : '</span><span>';
+    });
+
+    text = text.replace(/\[m/g, '</span><span>');
+
+    text = text.replace(/^(\$?\s*)([\w-]+)(\s+.*)?$/g, (match, prompt, cmd, args) => {
+        return `<span style="color: var(--console-prompt, #6b7280);">${prompt}</span>` +
+               `<span style="color: var(--console-command, #e2e8f0);">${cmd}</span>` +
+               (args ? `<span style="color: var(--console-args, #94a3b8);">${args}</span>` : '');
+    });
+
+    return `<span>${text}</span>`;
+}
+
+function smoothScrollConsole() {
+    const consoleOutput = document.getElementById('console-output');
+    consoleOutput.scrollTo({
+        top: consoleOutput.scrollHeight,
+        behavior: 'auto'
+    });
+}
+
+function updateStats(stats) {
+    const cpuUsage = (stats.cpu_absolute / 100).toFixed(2);
+    const ramUsage = (stats.memory_bytes / 1024 / 1024).toFixed(2);
+    const diskUsage = (stats.disk_bytes / 1024 / 1024).toFixed(2);
+    const networkUsage = (stats.network.tx_bytes / 1024).toFixed(2);
+
+    document.getElementById('cpu-usage-card').textContent = `${cpuUsage}%`;
+    document.getElementById('ram-usage-card2').textContent = `${ramUsage} MB`;
+    document.getElementById('disk-usage-card2').textContent = `${diskUsage} MB`;
+
+    updateUsageBar('cpu', cpuUsage, '%');
+    updateUsageBar('ram', ramUsage, 'MB', stats.memory_limit_bytes / 1024 / 1024);
+    updateUsageBar('disk', diskUsage, 'MB', stats.disk_limit_bytes / 1024 / 1024);
+    updateUsageBar('network', networkUsage, 'KB', networkUsage*100);
+}
+
+function updateUsageBar(type, value, unit, max = 100) {
+    const barElement = document.getElementById(`${type}-usage-bar`);
+    const textElement = document.getElementById(`${type}-usage`);
+    
+    const percentage = Math.min((value / max) * 100, 100);
+    barElement.style.width = `${percentage}%`;
+    
+    let displayValue = value;
+    let displayUnit = unit;
+    
+    if (unit === 'MB' && value > 1024) {
+        displayValue = (value / 1024).toFixed(2);
+        displayUnit = 'GiB';
+    } else if (unit === 'KB' && value > 1024) {
+        displayValue = (value / 1024).toFixed(2);
+        displayUnit = 'MiB';
+    }
+    
+    textElement.textContent = `${displayValue}${displayUnit}`;
+
+    if (percentage > 90) {
+        barElement.classList.add('bg-red-600');
+        barElement.classList.remove('bg-indigo-500', 'bg-emerald-600');
+    } else if (percentage > 75) {
+        barElement.classList.add('bg-indigo-500');
+        barElement.classList.remove('bg-red-600', 'bg-emerald-600');
+    } else {
+        barElement.classList.add('bg-emerald-600');
+        barElement.classList.remove('bg-red-600', 'bg-indigo-500');
+    }
+}
+
+function updateServerStatus(status) {
+    serverStatus = status.replace('offline', 'powered off');
+    const statusElement = document.getElementById('server-status');
+    statusElement.textContent = ((status.charAt(0).toUpperCase() + status.slice(1)).replace('Offline', 'Powered off')).replace('Running', 'Powered on');
+
+    const startButton = document.getElementById('start-server');
+    const stopButton = document.getElementById('stop-server');
+    const restartButton = document.getElementById('restart-server');
+    
+switch (status) {
+    case 'running':
+        startButton.disabled = true;
+        stopButton.disabled = false;
+        restartButton.disabled = false;
+        statusElement.classList.add('text-emerald-500', 'bg-emerald-500/15');
+        statusElement.classList.remove(
+            'text-red-500', 'text-yellow-500',
+            'bg-red-500/15', 'bg-yellow-500/15'
+        );
+        break;
+    case 'offline':
+        startButton.disabled = false;
+        stopButton.disabled = true;
+        restartButton.disabled = true;
+        statusElement.classList.add('text-red-500', 'bg-red-500/15');
+        statusElement.classList.remove(
+            'text-emerald-500', 'text-yellow-500',
+            'bg-emerald-500/15', 'bg-yellow-500/15'
+        );
+        break;
+    case 'starting':
+    case 'stopping':
+        startButton.disabled = true;
+        stopButton.disabled = false;
+        restartButton.disabled = true;
+        statusElement.classList.add('text-yellow-500', 'bg-yellow-500/15');
+        statusElement.classList.remove(
+            'text-emerald-500', 'text-red-500',
+            'bg-emerald-500/15', 'bg-red-500/15'
+        );
+        break;
+    default:
+        startButton.disabled = true;
+        stopButton.disabled = true;
+        restartButton.disabled = true;
+        statusElement.classList.add('text-yellow-500', 'bg-yellow-500/15');
+        statusElement.classList.remove(
+            'text-emerald-500', 'text-red-500',
+            'bg-emerald-500/15', 'bg-red-500/15'
+        );
+}
+}
+
+
+
+document.getElementById('start-server').addEventListener('click', () => sendPowerAction('start'));
+document.getElementById('stop-server').addEventListener('click', () => {
+    if (serverStatus === 'starting' || serverStatus === 'stopping') {
+        sendPowerAction('kill');
+    } else {
+        sendPowerAction('stop');
+    }
+});
+document.getElementById('restart-server').addEventListener('click', () => sendPowerAction('restart'));
+
+function sendPowerAction(action) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ event: 'set state', args: [action] }));
+        console.log(`Server ${action} command sent via WebSocket`);
+    } else {
+        console.error('WebSocket is not connected');
+        showAlert('error', 'Connection Error', 'Unable to send command. Please check your connection.');
+    }
+}
+
+document.getElementById('send-command').addEventListener('click', sendCommand);
+document.getElementById('console-input').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        sendCommand();
+    }
+});
+
+function sendCommand() {
+    const input = document.getElementById('console-input');
+    const command = input.value.trim();
+    if (command && socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ event: 'send command', args: [command] }));
+        console.log('Command sent via WebSocket');
+        input.value = '';
+    } else if (!socket || socket.readyState !== WebSocket.OPEN) {
+        console.error('WebSocket is not connected');
+        showAlert('error', 'Connection Error', 'Unable to send command. Please check your connection.');
+    }
+}
+
+
+
+const eulaPopupHTML = `
+<div id="eula-popup" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-[#1b1d21] p-10 rounded-2xl shadow-xl max-w-md w-full">
+    <h2 class="text-xl font-bold mb-4 text-white heavy">Minecraft EULA Agreement</h2>
+    <p class="text-gray-300 mb-6">You need to agree to the Minecraft End User License Agreement (EULA) to run this server.</p>
+    <div class="flex justify-end space-x-2.5">
+      <button id="decline-eula" class="px-4 py-2 bg-red-600 text-white rounded-l-xl rounded-r-lg hover:bg-red-700 transition-colors">Decline</button>
+      <button id="accept-eula" class="px-4 py-2 bg-emerald-600 text-white rounded-r-xl rounded-l-lg hover:bg-emerald-700 transition-colors">Accept</button>
+    </div>
+  </div>
+</div>
+`;
+
+document.body.insertAdjacentHTML('beforeend', eulaPopupHTML);
+
+function showEulaPopup() {
+  const popup = document.getElementById('eula-popup');
+  popup.classList.remove('hidden');
+  popup.classList.add('flex');
+}
+
+function hideEulaPopup() {
+  const popup = document.getElementById('eula-popup');
+  popup.classList.add('hidden');
+  popup.classList.remove('flex');
+}
+
+async function acceptEula() {
+  try {
+    await fetch(`/api/server/${serverId}/files/write?file=/eula.txt`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+      body: 'eula=true',
+    });
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ event: 'set state', args: ['restart'] }));
+      console.log('Server start command sent via WebSocket');
+    } else {
+      console.error('WebSocket is not connected');
+      showAlert('error', 'Connection Error', 'Unable to restart server. Please check your connection.');
+    }
+
+    hideEulaPopup();
+    showAlert('success', 'EULA Accepted', 'The Minecraft EULA has been accepted, and the server is restarting.');
+  } catch (error) {
+    console.error('Error accepting EULA:', error);
+    showAlert('error', 'EULA Acceptance Failed', 'An error occurred while accepting the EULA. Please try again.');
+  }
+}
+
+document.getElementById('accept-eula').addEventListener('click', acceptEula);
+document.getElementById('decline-eula').addEventListener('click', hideEulaPopup);
+
+function initPage() {
+    fetchServerDetails();
+    connectWebSocket();
+    
+}
+
+document.addEventListener('DOMContentLoaded', initPage);
+</script>
+
+<script>
+(function() {
+  const observer = new MutationObserver(() => {
+    const node = document.getElementById('node')?.textContent || '';
+    if (!node.includes('SG')) return;
+    
+    const warningElement = document.getElementById('backup-warning');
+    warningElement.classList.remove('hidden');
+    
+    const targetDate = new Date('2024-11-13T12:00:00Z');
+    const localTimeStr = targetDate.toLocaleString();
+    document.getElementById('local-time').textContent = localTimeStr;
+    
+    function updateCountdown() {
+      const now = new Date();
+      const diff = targetDate - now;
+      
+      if (diff <= 0) {
+        document.getElementById('countdown').textContent = 'IMMEDIATE ACTION REQUIRED';
+        document.getElementById('countdown-text').textContent = 'CRITICAL: BACKUP REQUIRED IMMEDIATELY';
+        return;
+      }
+      
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      
+      document.getElementById('countdown').textContent = 
+        `${hours}h ${minutes}m`;
+    }
+    
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  });
+
+  const targetNode = document.getElementById('node');
+  if (targetNode) {
+    observer.observe(targetNode, {
+      characterData: true,
+      childList: true,
+      subtree: true
+    });
+  }
+})();
+</script>
+
+<%- include('../components/page-scripts') %>

@@ -1,0 +1,161 @@
+<%- include('../components/layout') %>
+<main class="flex-grow container mx-auto px-4 py-8">
+
+    <%- include('../components/server') %>
+
+    <div class="bg-white/5 rounded-xl p-6 mt-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-xl font-semibold text-white">Activity Logs</h2>
+                <p class="text-gray-400 text-sm mt-1">Track all actions performed on your server</p>
+            </div>
+            <div class="flex space-x-2">
+                <select id="page-size" class="bg-white/5 border-none text-sm text-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500">
+                    <option value="20" selected>20 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="loading-state" class="text-center py-12">
+            <svg class="animate-spin h-8 w-8 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>
+
+        <div id="activity-list" class="hidden space-y-2">
+        </div>
+
+        <div id="empty-state" class="hidden text-center py-12 text-gray-400">
+            No activity logs found
+        </div>
+
+        <div id="pagination" class="hidden mt-6 flex justify-between items-center">
+            <div class="text-sm text-gray-400">
+                Showing <span id="showing-range">0-0</span> of <span id="total-items">0</span> items
+            </div>
+            <div class="flex space-x-2">
+                <button id="prev-page" class="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Previous
+                </button>
+                <button id="next-page" class="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Next
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+const serverId = new URLSearchParams(window.location.search).get('id');
+let currentPage = 1;
+let pageSize = 20;
+
+function loadServerDetails() {
+    fetch(`/api/server/${serverId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('server-name').textContent = data.attributes.name;
+            document.getElementById('server-description').textContent = data.attributes.description || "No description set.";
+        })
+        .catch(error => console.error('Error loading server details:', error));
+}
+
+function formatDate(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleString();
+}
+
+function createActivityItem(activity) {
+    const item = document.createElement('div');
+    item.className = 'bg-white/5 rounded-lg p-3 flex justify-between items-center';
+    
+    item.innerHTML = `
+        <div class="flex items-center space-x-4">
+            <div class="text-gray-400">
+                ${formatDate(activity.timestamp)}
+            </div>
+            <div class="text-white">
+                ${activity.action}
+            </div>
+        </div>
+    `;
+
+    return item;
+}
+
+function loadActivityLogs() {
+    const loadingState = document.getElementById('loading-state');
+    const activityList = document.getElementById('activity-list');
+    const emptyState = document.getElementById('empty-state');
+    const pagination = document.getElementById('pagination');
+
+    loadingState.classList.remove('hidden');
+    activityList.classList.add('hidden');
+    emptyState.classList.add('hidden');
+    pagination.classList.add('hidden');
+
+    fetch(`/api/server/${serverId}/logs?page=${currentPage}&limit=${pageSize}`)
+        .then(response => response.json())
+        .then(data => {
+            activityList.innerHTML = '';
+
+            if (data.data.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                activityList.classList.remove('hidden');
+                data.data.forEach(activity => {
+                    activityList.appendChild(createActivityItem(activity));
+                });
+            }
+
+            if (data.pagination) {
+                pagination.classList.remove('hidden');
+                document.getElementById('showing-range').textContent = 
+                    `${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, data.pagination.total_items)}`;
+                document.getElementById('total-items').textContent = data.pagination.total_items;
+                
+                const prevButton = document.getElementById('prev-page');
+                const nextButton = document.getElementById('next-page');
+                
+                prevButton.disabled = currentPage === 1;
+                nextButton.disabled = currentPage === data.pagination.total_pages;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading activity logs:', error);
+            emptyState.textContent = 'Error loading activity logs';
+            emptyState.classList.remove('hidden');
+        })
+        .finally(() => {
+            loadingState.classList.add('hidden');
+        });
+}
+
+document.getElementById('prev-page').addEventListener('click', () => {
+    if (currentPage > 1) {
+        currentPage--;
+        loadActivityLogs();
+    }
+});
+
+document.getElementById('next-page').addEventListener('click', () => {
+    currentPage++;
+    loadActivityLogs();
+});
+
+document.getElementById('page-size').addEventListener('change', (e) => {
+    pageSize = parseInt(e.target.value);
+    currentPage = 1;
+    loadActivityLogs();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadServerDetails();
+    loadActivityLogs();
+});
+</script>
+
+<%- include('../components/page-scripts') %>

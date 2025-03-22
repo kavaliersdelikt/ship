@@ -1,0 +1,20 @@
+<%- include('./components/layout') %>
+<main class="flex-grow container mx-auto px-4 py-8">
+  <div class="min-h-[60vh] flex flex-col items-center justify-center">
+    <div class="p-8 bg-white/5 rounded-2xl border border-white/5 relative overflow-hidden text-center max-w-2xl">
+      <div class="absolute inset-0 opacity-5">
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500 rounded-full blur-3xl"></div>
+        <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-blue-500 rounded-full blur-3xl"></div>
+      </div>
+      
+      <div class="relative">
+        <h1 class="text-8xl font-bold text-white mb-4">404</h1>
+        <h2 class="text-2xl font-medium text-white/80 mb-6">Page Not Found</h2>
+        <p class="text-white/60 text-lg mb-8">The page you're looking for doesn't exist or has been moved.</p>
+        
+        
+      </div>
+    </div>
+  </div>
+</main>
+<%- include('./components/page-scripts') %>

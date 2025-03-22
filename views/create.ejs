@@ -1,0 +1,464 @@
+<%- include('./components/layout') %>
+<main class="flex-grow container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center w-full mx-auto pb-8">
+        <div class="flex flex-col">
+            <h1 class="text-4xl font-bold mb-2 text-white tracking-tight">Deploy a Server</h1>
+            <p class="text-white/60">Configure and launch your server instance in seconds</p>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div id="deployStatus" class="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/10">
+                <div class="size-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                <span class="text-sm text-white/70">Ready to deploy</span>
+            </div>
+            <button onclick="submitForm()" class="px-6 py-2.5 bg-white/5 rounded-xl border border-white/5 relative overflow-hidden group hover:bg-white/[0.075] transition-colors duration-200 flex items-center gap-2">
+                <div class="absolute inset-0 opacity-5">
+                    <div class="absolute -right-8 -top-8 w-24 h-24 bg-indigo-500 rounded-full blur-2xl"></div>
+                </div>
+                <div class="relative flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-indigo-400">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008z" />
+                    </svg>
+                    <span class="text-white/90 font-medium">Deploy Server</span>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <% if (req.query.err) { %>
+        <div class="mb-6 rounded-xl bg-red-500/10 border border-red-500/20 p-4">
+            <div class="flex items-center gap-3">
+                <div class="shrink-0 bg-red-500/20 rounded-lg p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 text-red-400">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-red-400">Deployment Error</h3>
+                    <p class="mt-1 text-sm text-red-300">
+                        <%= (() => {
+                            switch(req.query.err) {
+                                case "MISSINGVARIABLE":
+                                    return "Please fill in all required deployment information.";
+                                case "ERRORONCREATE":
+                                    return "Deployment failed. This appears to be a system error, please try again.";
+                                case "MISSINGEGG":
+                                case "INVALIDEGG":
+                                    return "Invalid server template selected. Please select a valid template to continue.";
+                                case "TOOLITTLERAM":
+                                case "TOOLITTLEDISK": 
+                                case "TOOLITTLECPU":
+                                    return `Minimum resource requirements not met. Required: ${req.query.num} ${req.query.err.slice(-3) === "RAM" ? "MB RAM" : req.query.err.slice(-4) === "DISK" ? "MB disk" : "% CPU"}`;
+                                case "TOOMUCHRAM":
+                                case "TOOMUCHDISK":
+                                case "TOOMUCHCPU":
+                                    return `Resource limit exceeded. Maximum allowed: ${req.query.num} ${req.query.err.slice(-3) === "RAM" ? "MB RAM" : req.query.err.slice(-4) === "DISK" ? "MB disk" : "% CPU"}`;
+                                case "EXCEEDRAM":
+                                case "EXCEEDDISK":
+                                case "EXCEEDCPU":
+                                    return "Resource allocation exceeds your plan limits.";
+                                default:
+                                    return "An unexpected error occurred during deployment.";
+                            }
+                        })() %>
+                    </p>
+                </div>
+            </div>
+        </div>
+    <% } %>
+
+    
+    <div class="grid grid-cols-12 gap-6">
+        
+        <div class="col-span-3">
+            <div class="sticky top-8 space-y-2">
+                <div id="step1" class="step-item active" onclick="showStep(1)">
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+                        <div class="shrink-0 size-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white font-medium">1</div>
+                        <span class="text-sm font-medium text-white">Choose Template</span>
+                    </div>
+                </div>
+                <div id="step2" class="step-item" onclick="showStep(2)">
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+                        <div class="shrink-0 size-8 rounded-lg bg-white/10 flex items-center justify-center text-white/70 font-medium">2</div>
+                        <span class="text-sm font-medium text-white/70">Configure Server</span>
+                    </div>
+                </div>
+                <div id="step3" class="step-item" onclick="showStep(3)">
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+                        <div class="shrink-0 size-8 rounded-lg bg-white/10 flex items-center justify-center text-white/70 font-medium">3</div>
+                        <span class="text-sm font-medium text-white/70">Select Location</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="col-span-9">
+            
+            <div id="templateStep" class="step-content active">
+                <div class="p-6 bg-white/5 rounded-xl border border-white/10">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-semibold text-white">Choose a Template</h2>
+                        <div class="flex gap-3">
+                            <div class="relative">
+                                <input type="text" id="image-search" placeholder="Search templates..." class="w-64 px-4 py-2 pl-10 text-sm rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="absolute left-3 top-2.5 size-4 text-white/40">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                                </svg>
+                            </div>
+                            <select id="category-select" class="px-4 py-2 text-sm rounded-lg bg-white/5 border border-white/10 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="all">All Categories</option>
+                                <option value="Game Servers">Game Servers</option>
+                                <option value="Generic">Generic</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="image-grid" class="grid grid-cols-2 gap-4">
+                        <% const images = [
+                            { id: "paper", name: "Minecraft: Paper", category: "Game Servers", logo: "https://avatars.githubusercontent.com/u/7608950?s=200&v=4", description: "High performance Minecraft server" },
+                            { id: "velocity", name: "Minecraft: Velocity", category: "Game Servers", logo: "https://avatars.githubusercontent.com/u/41710604?s=200&v=4", description: "Modern Minecraft proxy" }
+                        ] %>
+                        <% images.forEach(image => { %>
+                            <div class="image-card group relative flex items-start gap-4 rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/[0.075] transition-all duration-200 cursor-pointer" data-category="<%= image.category %>" data-name="<%= image.name.toLowerCase() %>" data-id="<%= image.id %>" onclick="selectTemplate(this)">
+                                <img class="size-12 rounded-lg" src="<%= image.logo %>" alt="">
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="text-white font-medium"><%= image.name %></h3>
+                                        <span class="px-2.5 py-1 text-xs font-medium bg-emerald-500/10 text-emerald-300 rounded-full">Ready</span>
+                                    </div>
+                                    <p class="mt-1 text-sm text-white/60"><%= image.description %></p>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+            </div>
+            <%
+    let ram = 0;
+    let disk = 0;
+    let cpu = 0;
+    let servers = pterodactyl.relationships.servers.data.length;
+    for (let i = 0, len = pterodactyl.relationships.servers.data.length; i < len; i++) {
+       ram = ram + (typeof pterodactyl.relationships.servers.data[i].attributes.limits.memory == "number" ? pterodactyl.relationships.servers.data[i].attributes.limits.memory : 0);
+       disk = disk + (typeof pterodactyl.relationships.servers.data[i].attributes.limits.disk == "number" ? pterodactyl.relationships.servers.data[i].attributes.limits.disk : 0);
+       cpu = cpu + (typeof pterodactyl.relationships.servers.data[i].attributes.limits.cpu == "number" ? pterodactyl.relationships.servers.data[i].attributes.limits.cpu : 0);
+    }
+    %>
+
+            
+            <div id="configStep" class="step-content hidden">
+                <div class="p-6 bg-white/5 rounded-xl border border-white/10">
+                    <h2 class="text-xl font-semibold text-white mb-6">Configure Server</h2>
+
+                    
+                    <div class="mb-8 p-6 bg-white/5 rounded-xl border border-white/5 relative overflow-hidden">
+                        <div class="absolute inset-0 opacity-5">
+                            <div class="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500 rounded-full blur-3xl"></div>
+                        </div>
+                        <div class="relative">
+                            <div class="flex items-center gap-3 mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-indigo-400">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+                                </svg>
+                                <h3 class="text-lg font-semibold text-white">Available Resources</h3>
+                            </div>
+                            <div class="grid grid-cols-3 gap-6">
+                                <div class="p-4 rounded-xl bg-white/5 border border-white/5">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-indigo-400">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
+                                        </svg>
+                                        <span class="text-white/70">Memory</span>
+                                    </div>
+                                    <span class="text-indigo-400 font-medium"><%= (packages.ram/1024 + extraresources.ram/1024 - ram/1024).toFixed(2) %> GB</span>
+                                </div>
+                                <div class="p-4 rounded-xl bg-white/5 border border-white/5">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-indigo-400">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z" />
+                                        </svg>
+                                        <span class="text-white/70">CPU</span>
+                                    </div>
+                                    <span class="text-indigo-400 font-medium"><%= (packages.cpu/100 + extraresources.cpu/100 - cpu/100).toFixed(2) %>%</span>
+                                </div>
+                                <div class="p-4 rounded-xl bg-white/5 border border-white/5">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-indigo-400">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+                                        </svg>
+                                        <span class="text-white/70">Storage</span>
+                                    </div>
+                                    <span class="text-indigo-400 font-medium"><%= (packages.disk/1024 + extraresources.disk/1024 - disk/1024).toFixed(2) %> GB</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="createServerForm" class="space-y-6">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-white/70 mb-2">Server Name</label>
+                            <input type="text" name="name" id="name" class="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="e.g. production-server-01">
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-white/70 mb-2">Memory (RAM)</label>
+                                <div class="relative">
+                                    <input type="number" name="ram" id="ram" class="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:border-transparent" value="2">
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <span class="text-sm text-white/40">GB</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-white/70 mb-2">CPU Limit</label>
+                                <div class="relative">
+                                    <input type="number" name="cpu" id="cpu" class="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:border-transparent" value="100">
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <span class="text-sm text-white/40">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-white/70 mb-2">Storage</label>
+                                <div class="relative">
+                                    <input type="number" name="disk" id="disk" class="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:border-transparent" value="10">
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <span class="text-sm text-white/40">GB</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            
+            <div id="locationStep" class="step-content hidden">
+                <div class="p-6 bg-white/5 rounded-xl border border-white/10">
+                    <h2 class="text-xl font-semibold text-white mb-6">Select Location</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <% const locations = [
+                            { id: "1", name: "Eygelshoven", country: "Netherlands", flag: "https://cdn-icons-png.flaticon.com/512/12360/12360407.png", region: "SkyLink", nodes: ["GER_SKY"], capacity: 100, cpu: "Dual AMD EPYC 7543", storage: "512GB NVMe SSD", latency: "23ms" },
+                        ] %>
+                        <% locations.forEach(location => { %>
+                            <div class="location-card group relative rounded-xl border border-white/10 bg-white/5 p-5 hover:bg-white/[0.075] transition-all duration-200 cursor-pointer" data-location-id="<%= location.id %>" onclick="selectLocation(this)">
+                                <div class="flex items-start gap-4">
+                                    <img class="size-10 rounded-lg ring-2 ring-white/10" src="<%= location.flag %>" alt="<%= location.country %> Flag">
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between">
+                                            <h3 class="text-white font-medium"><%= location.name %></h3>
+                                            <span class="flex items-center gap-1.5 text-xs text-white/60">
+                                                <div class="size-1.5 rounded-full bg-emerald-400"></div>
+                                                Online
+                                            </span>
+                                        </div>
+                                        <p class="mt-1 text-sm text-white/60"><%= location.region %></p>
+                                        <div class="mt-4 flex items-center gap-6">
+                                            <div class="flex items-center gap-1.5">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 text-white/40">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <span class="text-xs text-white/40"><%= location.latency %> latency</span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 text-white/40">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                                                </svg>
+                                                <span class="text-xs text-white/40"><%= location.capacity %>% capacity</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/AlertifyJS/1.13.1/alertify.js"></script>
+    <script>
+        let currentStep = 1;
+        let selectedLocation = "";
+        let selectedZone = "";
+        let selectedImage = "";
+
+        function showStep(step) {
+            document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.step-item').forEach(el => el.classList.remove('active'));
+            
+            switch(step) {
+                case 1:
+                    document.getElementById('templateStep').classList.remove('hidden');
+                    document.getElementById('step1').classList.add('active');
+                    break;
+                case 2:
+                    document.getElementById('configStep').classList.remove('hidden');
+                    document.getElementById('step2').classList.add('active');
+                    break;
+                case 3:
+                    document.getElementById('locationStep').classList.remove('hidden');
+                    document.getElementById('step3').classList.add('active');
+                    break;
+            }
+            currentStep = step;
+            updateDeployStatus();
+        }
+
+        function selectTemplate(element) {
+            document.querySelectorAll('.image-card').forEach(card => {
+                card.classList.remove('selected', 'ring-2', 'ring-indigo-500');
+            });
+            element.classList.add('selected', 'ring-2', 'ring-indigo-500');
+            selectedImage = element.dataset.id;
+            showStep(2);
+            updateDeployStatus();
+        }
+
+        function selectLocation(element) {
+            document.querySelectorAll('.location-card').forEach(card => {
+                card.classList.remove('selected', 'ring-2', 'ring-indigo-500');
+            });
+            element.classList.add('selected', 'ring-2', 'ring-indigo-500');
+            selectedLocation = element.dataset.locationId;
+            updateDeployStatus();
+        }
+
+        function updateDeployStatus() {
+            const deployStatus = document.getElementById('deployStatus');
+            const form = document.getElementById('createServerForm');
+            const formData = new FormData(form);
+            
+            const name = formData.get('name');
+            const ram = formData.get('ram');
+            const disk = formData.get('disk');
+            const cpu = formData.get('cpu');
+
+            if (name && ram && disk && cpu && selectedLocation && selectedImage) {
+                deployStatus.innerHTML = `
+                    <div class="size-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                    <span class="text-sm text-white/70">Ready to deploy</span>
+                `;
+            } else {
+                deployStatus.innerHTML = `
+                    <div class="size-2 rounded-full bg-amber-400"></div>
+                    <span class="text-sm text-white/70">Complete all steps</span>
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const imageGrid = document.getElementById('image-grid');
+            const categorySelect = document.getElementById('category-select');
+            const searchInput = document.getElementById('image-search');
+            const form = document.getElementById('createServerForm');
+
+            form.addEventListener('input', updateDeployStatus);
+
+            function filterImages() {
+                const selectedCategory = categorySelect.value;
+                const searchTerm = searchInput.value.toLowerCase();
+
+                imageGrid.style.opacity = '0';
+                setTimeout(() => {
+                    const imageCards = imageGrid.querySelectorAll('.image-card');
+                    imageCards.forEach(card => {
+                        const category = card.dataset.category;
+                        const name = card.dataset.name;
+                        const matchesCategory = selectedCategory === 'all' || category === selectedCategory;
+                        const matchesSearch = name.includes(searchTerm);
+                        card.style.display = matchesCategory && matchesSearch ? 'flex' : 'none';
+                    });
+                    imageGrid.style.opacity = '1';
+                }, 300);
+            }
+
+            categorySelect.addEventListener('change', filterImages);
+            searchInput.addEventListener('input', filterImages);
+        });
+
+        async function submitForm() {
+            const form = document.getElementById('createServerForm');
+            const formData = new FormData(form);
+            
+            const name = encodeURIComponent(formData.get('name'));
+            const ram = encodeURIComponent(parseFloat(formData.get('ram')) * 1024);
+            const disk = encodeURIComponent(parseFloat(formData.get('disk')) * 1024);
+            const cpu = encodeURIComponent(formData.get('cpu'));
+            
+            if (!name || !ram || !disk || !cpu || !selectedLocation || !selectedImage) {
+                alertify.error('Please complete all deployment steps before continuing.');
+                return;
+            }
+
+            const url = `/create?name=${name}&egg=${selectedImage}&ram=${ram}&disk=${disk}&cpu=${cpu}&location=${selectedLocation}`;
+            window.location.href = url;
+        }
+
+        alertify.set('notifier','position', 'top-right');
+    </script>
+
+    <style>
+        .step-content {
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .step-content.hidden {
+            display: none;
+        }
+
+        .location-card.selected, .image-card.selected {
+            background-color: rgb(99 102 241 / 0.1);
+        }
+
+        .alertify-notifier .ajs-message {
+            border-radius: 0.75rem;
+            padding: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .alertify-notifier .ajs-message.ajs-error {
+            background: rgb(239 68 68 / 0.1);
+            color: rgb(239 68 68);
+            border: 1px solid rgb(239 68 68 / 0.1);
+        }
+
+        .alertify-notifier .ajs-message.ajs-success {
+            background: rgb(34 197 94 / 0.1);
+            color: rgb(34 197 94);
+            border: 1px solid rgb(34 197 94 / 0.1);
+        }
+
+        .image-card, .location-card {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .image-card:hover, .location-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .step-item {
+            position: relative;
+        }
+
+        .step-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 19px;
+            top: 100%;
+            height: 16px;
+            width: 2px;
+            background: rgb(255 255 255 / 0.1);
+        }
+
+        .step-item.active > div {
+            background: rgb(99 102 241 / 0.1);
+            border-color: rgb(99 102 241 / 0.2);
+        }
+    </style>
+</main>
+<%- include('./components/page-scripts') %>

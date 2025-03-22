@@ -1,0 +1,143 @@
+<%- include('./components/layout') %>
+
+<main class="flex-grow container mx-auto px-4 py-8">
+
+<% if (req.query.err && req.query.err == "MODIFIED") { %>
+<div class="my-4 rounded-full shadow-sm border border-white/10 px-3 py-2 pt-2.5">
+<span class="text-white text-xs mt-0.5">
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 mb-0.5 text-indigo-300 rounded-full shadow-sm bg-indigo-500/15 p-1.5 mr-2.5 inline-flex">
+  <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+</svg>
+Action completed - the server's resources have been modified. <code style="font-family: 'JetBrains Mono'" class="text-white/60">&nbsp;• action ID <%= Math.random().toString(36).substring(2, 8) %></code>
+</span>
+</div>
+<% } %>
+
+<div class="flex justify-between items-center w-full mx-auto pb-6">
+    <div class="flex flex-col">
+        <h1 class="text-2xl font-semibold text-white mb-1">Edit Server</h1>
+        <p class="text-white/70">Update your server's resources and configuration</p>
+    </div>
+
+    <nav class="flex py-2 px-4 rounded-xl bg-white/5">
+        <ol class="flex items-center space-x-2">
+            <li>
+                <a href="/" class="text-sm flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                    </svg>
+                    Home
+                </a>
+            </li>
+            <li class="text-white/40">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                </svg>
+            </li>
+            <li>
+                <span class="text-sm text-white">Edit Server</span>
+            </li>
+        </ol>
+    </nav>
+</div>
+
+<%
+let id;
+id = req.query.numeric
+%>
+<%
+    let ram = 0;
+    let disk = 0;
+    let cpu = 0;
+    let servers = pterodactyl.relationships.servers.data.length;
+    for (let i = 0, len = pterodactyl.relationships.servers.data.length; i < len; i++) {
+        ram = ram + (typeof pterodactyl.relationships.servers.data[i].attributes.limits.memory == "number" ? pterodactyl.relationships.servers.data[i].attributes.limits.memory : 0);
+        disk = disk + (typeof pterodactyl.relationships.servers.data[i].attributes.limits.disk == "number" ? pterodactyl.relationships.servers.data[i].attributes.limits.disk : 0);
+        cpu = cpu + (typeof pterodactyl.relationships.servers.data[i].attributes.limits.cpu == "number" ? pterodactyl.relationships.servers.data[i].attributes.limits.cpu : 0);
+    }
+%>
+
+<% if (id) { %>
+    <% if (pterodactyl.relationships.servers.data.filter(name => name.attributes.id == id).length == 1) {
+        let serverinfo = pterodactyl.relationships.servers.data.filter(name => name.attributes.id == id)[0];
+        let attemptegg = null;
+        let attemptname = null;
+        for (let [name, value] of Object.entries(settings.api.client.eggs)) {
+            if (settings.api.client.eggs[name].info.egg == serverinfo.attributes.egg) {
+                attemptegg = settings.api.client.eggs[name];
+                attemptname = name;
+            };
+        };
+        let egginfo = attemptegg ? attemptegg.display : "???";
+    %>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-6">
+            <div class="p-6 bg-white/5 rounded-xl border border-white/5">
+                <h3 class="text-lg font-semibold text-white mb-4">Server Resources</h3>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-white/70 mb-2">Memory (GiB)</label>
+                        <input type="text" name="ram" id="ram" 
+                            class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                            value="<%= (packages ? packages.ram : 0)/1024 + extraresources.ram/1024 - ram/1024 + serverinfo.attributes.limits.memory/1024 %>"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-white/70 mb-2">CPU Cores</label>
+                        <input type="text" name="cpu" id="cpu"
+                            class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                            value="<%= (packages ? packages.cpu/100 : 0) + extraresources.cpu/100 - cpu/100 + serverinfo.attributes.limits.cpu/100 %>"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-white/70 mb-2">Storage (GiB)</label>
+                        <input type="text" name="disk" id="disk"
+                            class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                            value="<%= (packages ? packages.disk : 0)/1024 + extraresources.disk/1024 - disk/1024 + serverinfo.attributes.limits.disk/1024 %>"
+                        >
+                    </div>
+                </div>
+
+                <button onclick="submitForm()" class="mt-6 inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-indigo-500 hover:bg-indigo-400 rounded-lg transition-all duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                    </svg>
+                    Apply Changes
+                </button>
+            </div>
+        </div>
+
+        <div class="p-6 bg-white/5 rounded-xl border border-white/5">
+            <h3 class="text-lg font-semibold text-white mb-4">Resource Information</h3>
+            <div class="space-y-4 text-sm text-white/70">
+                <p>These changes will be applied immediately to your server. Make sure you have enough available resources before applying changes.</p>
+                <p>Your server will not be restarted during this process unless the resources are decreased.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function submitForm() {
+            let ram = encodeURIComponent(document.getElementById("ram").value);
+            let disk = encodeURIComponent(document.getElementById("disk").value);
+            let cpu = encodeURIComponent(document.getElementById("cpu").value);
+            document.location.href = `/modify?id=<%= id %>&ram=${ram*1024}&disk=${disk*1024}&cpu=${cpu*100}`;
+        };
+    </script>
+    <% } else { %>
+        <div class="p-6 bg-white/5 rounded-xl border border-white/5">
+            <p class="text-white">Could not find server with the provided ID.</p>
+        </div>
+    <% } %>
+<% } else { %>
+    <div class="p-6 bg-white/5 rounded-xl border border-white/5">
+        <p class="text-white">Missing server ID.</p>
+    </div>
+<% } %>
+
+</main>
+
+<%- include('./components/page-scripts') %>

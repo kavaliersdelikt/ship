@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link 
+    rel="preload" 
+    href="/assets/Ndot-55.otf" 
+    as="font" 
+    type="font/otf" 
+    crossorigin="anonymous"
+>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+        rel="stylesheet">
+
+    <style>
+        .text-3xl {
+            color: white;
+        }
+
+        .text-2xl {
+            color: white;
+        }
+
+        .text-xl {
+            color: white;
+        }
+
+        .text-lg {
+            color: white;
+        }
+
+        h3 {
+            color: white;
+        }
+
+        h2 {
+            color: white
+        }
+
+        h3 {
+            color: white
+        }
+
+        @keyframes loading {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(to right, #4f46e5, #818cf8);
+            animation: loading 0.1s ease-in-out;
+            z-index: 1000;
+        }
+
+        .spinner {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            animation: spin 0.1s linear infinite;
+            z-index: 1000;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono' !important;
+        }
+    </style>
+<style>
+@font-face {
+    font-family: 'Ndot-55';
+    src: url('/assets/Ndot-55.otf') format('opentype');
+    font-weight: normal;
+    font-display: swap;
+    font-style: normal;
+    unicode-range: U+000-5FF;
+    font-synthesis: none;
+}
+
+.heavy {
+    font-family: 'Ndot-55', sans-serif;
+    font-weight: normal;
+    text-transform: uppercase;
+}
+
+#server-name {
+    font-family: 'Ndot-55', sans-serif;
+    font-weight: normal;
+    text-transform: uppercase;
+}
+
+.extra-bold {
+    font-family: 'Ndot-55', sans-serif;
+    font-weight: normal;
+    text-transform: uppercase;
+}
+</style>
+    
+    <meta name="description"
+        content="Experience seamless deployment with Ship.rocks's powerful dashboard. Free serverless hosting for web projects, game servers, and containerized applications with automated scaling, monitoring, and zero maintenance.">
+
+    <meta name="keywords"
+        content="container management, serverless hosting, cloud platform, container orchestration, Ship.rocks dashboard, free hosting, game server hosting, Docker containers, cloud deployment, DevOps platform, container scaling, microservices management, cloud infrastructure, container monitoring, Ship.rocks cloud">
+
+    <meta name="author" content="SRYDEN, Inc.">
+
+    
+    <meta property="og:title" content="Ship.rocks">
+    <meta property="og:description"
+        content="We're Ship.rocks, a free hosting platform for your projects, game servers, and more. Built for cloud-native and serverless projects by design.">
+    <meta property="og:type" content="website">
+
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body class="bg-[#010103] text-gray-300" style="font-family: 'Inter'">
+    
+    <div class="loading-bar"></div>
+    
+    <div class="spinner">
+        <svg class="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </div>
+
+    
+    <nav class="bg-white/5 backdrop-blur-lg border-b border-white/5">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                
+                <a href="/dashboard" class="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-white/10 transition-all duration-200">
+                    <img src="https://i.imgur.com/9BChdfu.png" alt="Logo" class="w-auto h-7 invert">
+                    <div class="flex flex-col">
+                        <span class="text-white/90 text-sm ">Ship</span>
+                        <span class="text-white/50 text-xs">Dashboard</span>
+                    </div>
+                </a>
+
+                
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="../dashboard" class="text-white/70 hover:text-white transition-colors duration-200">Dashboard</a>
+                    <a href="../servers" class="text-white/70 hover:text-white transition-colors duration-200">Servers</a>
+                    <a href="../account" class="text-white/70 hover:text-white transition-colors duration-200">Account</a>
+                    <a href="../referrals" class="text-white/70 hover:text-white transition-colors duration-200">Affiliates</a>
+                    <% if (req.session.pterodactyl.root_admin) { %>
+                        <a href="../admin" class="text-white/70 hover:text-white transition-colors duration-200">Admin</a>
+                    <% } %>
+                </div>
+
+                
+                <div class="flex items-center gap-3">                    
+                    
+                    
+                    <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-white/70 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] rounded-xl transition-all duration-200 border border-white/[0.05] hover:border-white/[0.08]">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-indigo-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                        </svg>
+                        Help
+                    </a>
+
+                    <a href="https://discord.gg/s" class="flex items-center gap-2 px-4 py-2 text-sm text-white/70 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] rounded-xl transition-all duration-200 border border-white/[0.05] hover:border-white/[0.08]">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-indigo-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
+                        </svg>
+                        Discord
+                    </a>
+
+                    <div class="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-500/10 text-emerald-300 rounded-xl border border-emerald-500/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-emerald-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        Operational
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+        </div>
+    </nav>
+
+    
+    <div class="md:hidden fixed bottom-4 right-4 z-50">
+        <button onclick="toggleMobileMenu()" class="bg-indigo-500 text-white p-3 rounded-full shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+    </div>
+
+    
+    <div id="mobileMenu" class="hidden fixed inset-0 bg-black bg-opacity-90 z-40 md:hidden">
+        <div class="flex flex-col items-center justify-center h-full space-y-6">
+            <a href="../dashboard" class="text-white text-xl">Dashboard</a>
+            <a href="../webhosting" class="text-white text-xl">Web Hosting</a>
+            <a href="../servers" class="text-white text-xl">Servers</a>
+            <a href="../account" class="text-white text-xl">Profile</a>
+            <a href="../referrals" class="text-white text-xl">Affiliates</a>
+            <button onclick="toggleMobileMenu()" class="text-white text-xl mt-6">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        setTimeout(() => {
+            document.querySelector('.loading-bar').style.display = 'none';
+            document.querySelector('.spinner').style.display = 'none';
+        }, 500);
+    </script>
+
+    <div class="px-10 mt-4">
+        <div id="application" class="hidden min-h-[490px] flex justify-center">

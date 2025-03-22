@@ -1,0 +1,136 @@
+<% if (!req.query.id || !req.query.numeric) { %>
+<meta http-equiv="refresh" content="0; url=/servers?err=INVALID">
+<% } %>
+
+<nav class="relative z-50 mb-6">
+    <div class="md:hidden">
+        <button id="mobile-menu-btn" class="flex items-center gap-2 text-gray-300 hover:text-white transition-all duration-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <span>Menu</span>
+        </button>
+    </div>
+
+    <div id="nav-menu" class="hidden md:block">
+        <div class="relative p-5 bg-black rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+            <div class="absolute inset-0">
+                <div class="absolute w-[500px] h-[500px] -top-[250px] -right-[250px] bg-purple-500/10 rounded-full blur-3xl"></div>
+                <div class="absolute w-[500px] h-[500px] -bottom-[250px] -left-[250px] bg-indigo-500/10 rounded-full blur-3xl"></div>
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+            </div>
+            
+            <div class="relative flex flex-wrap items-center gap-3">
+                <a href="/server/manage?id=<%= req.query.id %>&numeric=<%= req.query.numeric %>&mode=server" 
+                    class="group relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300 text-sm font-medium hover:transform hover:scale-105">
+                    <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="text-gray-400 group-hover:text-white transition-colors duration-300">Console</span>
+                </a>
+
+                <a href="/server/files?id=<%= req.query.id %>&numeric=<%= req.query.numeric %>&mode=server"
+                    class="group relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300 text-sm font-medium hover:transform hover:scale-105">
+                    <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    <span class="text-gray-400 group-hover:text-white transition-colors duration-300">Files</span>
+                </a>
+
+                <a href="/server/backups?id=<%= req.query.id %>&numeric=<%= req.query.numeric %>&mode=server"
+                    class="group relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300 text-sm font-medium hover:transform hover:scale-105">
+                    <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                    </svg>
+                    <span class="text-gray-400 group-hover:text-white transition-colors duration-300">Backups</span>
+                </a>
+
+                <a href="/server/allocations?id=<%= req.query.id %>&numeric=<%= req.query.numeric %>&mode=server"
+                    class="group relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300 text-sm font-medium hover:transform hover:scale-105">
+                    <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    <span class="text-gray-400 group-hover:text-white transition-colors duration-300">Allocations</span>
+                </a>
+
+                <a href="/server/settings?id=<%= req.query.id %>&numeric=<%= req.query.numeric %>&mode=server"
+                    class="group relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300 text-sm font-medium hover:transform hover:scale-105">
+                    <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span class="text-gray-400 group-hover:text-white transition-colors duration-300">Settings</span>
+                </a>
+
+                <a href="/server/logs?id=<%= req.query.id %>&numeric=<%= req.query.numeric %>"
+                    class="group relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300 text-sm font-medium hover:transform hover:scale-105">
+                    <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="text-gray-400 group-hover:text-white transition-colors duration-300">Activity</span>
+                </a>
+
+                <% if (req.query.numeric !== '0') { %>
+                    <a href="/server/subusers?id=<%= req.query.id %>&numeric=<%= req.query.numeric %>"
+                        class="group relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300 text-sm font-medium hover:transform hover:scale-105">
+                        <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <span class="text-gray-400 group-hover:text-white transition-colors duration-300">Subusers</span>
+                    </a>
+                <% } %>
+
+                <a href="/servers/edit?numeric=<%= req.query.numeric %>"
+                    class="group relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300 text-sm font-medium hover:transform hover:scale-105">
+                    <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    <span class="text-gray-400 group-hover:text-white transition-colors duration-300">Edit Server</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const currentPath = window.location.pathname;
+    const mobileMenuButton = document.getElementById('mobile-menu-btn');
+    const menuItems = document.getElementById('menu-items');
+    const moreMenuButton = document.getElementById('more-menu-button');
+    const moreMenuContent = document.getElementById('more-menu-content');
+    
+    document.querySelectorAll('.nav-link').forEach(link => {
+        const href = link.getAttribute('href')?.split('?')[0];
+        if (href && currentPath.includes(href)) {
+            link.classList.add('bg-indigo-500/20', 'text-indigo-300');
+        }
+    });
+
+    mobileMenuButton?.addEventListener('click', () => {
+        menuItems.classList.toggle('hidden');
+    });
+
+    let closeTimeout;
+
+    document.addEventListener('click', (event) => {
+        const isClickInMoreMenu = event.target.closest('#more-menu-button, #more-menu-content');
+        const isClickInMobileMenu = event.target.closest('#mobile-menu-btn, #menu-items');
+
+        if (!isClickInMoreMenu && isMoreMenuOpen) {
+            closeMoreMenu();
+        }
+
+        if (!isClickInMobileMenu && !menuItems?.classList.contains('hidden') && window.innerWidth < 768) {
+            menuItems?.classList.add('hidden');
+        }
+    });
+});
+</script>

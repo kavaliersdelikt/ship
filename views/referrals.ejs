@@ -1,0 +1,102 @@
+<%- include('./components/layout') %>
+
+<main class="flex-grow container mx-auto px-4 py-12">
+    <div class="text-center mb-16">
+        <h1 class="text-4xl font-black text-white tracking-tight">
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-gray-100 to-gray-500">
+                Referral System
+            </span>
+        </h1>
+        <p class="text-gray-500 mt-2 text-sm font-medium">Invite friends. Earn rewards. Grow together.</p>
+    </div>
+
+    <% if (req.query.err) { %>
+        <div class="max-w-2xl mx-auto mb-8">
+            <div class="rounded-md border <%= req.query.err === 'none' ? 'border-emerald-900/20 bg-emerald-900/5' : 'border-red-900/20 bg-red-900/5' %> p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <% if (req.query.err === 'none') { %>
+                            <svg class="h-5 w-5 text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                        <% } else { %>
+                            <svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        <% } %>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm <%= req.query.err === 'none' ? 'text-emerald-500' : 'text-red-500' %>">
+                            <% if (req.query.err === 'none') { %>
+                                Successfully created the referral code!
+                            <% } else if (req.query.err === 'ALREADYEXISTS') { %>
+                                This code is already taken. Try another one.
+                            <% } else if (req.query.err === 'INVALIDCODE') { %>
+                                Please enter a valid referral code.
+                            <% } %>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% } %>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-8">
+            <div class="bg-black/40 backdrop-blur-sm border border-white/5 rounded-2xl p-8">
+                <div class="flex items-center space-x-4 mb-8">
+                    <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Reward Structure</h2>
+                        <p class="text-gray-500 text-sm">Earn resources for every successful referral</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-black/40 border border-white/5 rounded-xl p-6">
+                        <div class="text-gray-400 text-sm font-medium mb-2">Your Reward</div>
+                        <div class="text-3xl font-bold text-white mb-1">128MB RAM</div>
+                        <div class="text-gray-500 text-xs">Per successful referral</div>
+                    </div>
+                    <div class="bg-black/40 border border-white/5 rounded-xl p-6">
+                        <div class="text-gray-400 text-sm font-medium mb-2">Friend's Reward</div>
+                        <div class="text-3xl font-bold text-white mb-1">256MB RAM</div>
+                        <div class="text-gray-500 text-xs">One-time bonus</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-8">
+            <div class="bg-black/40 backdrop-blur-sm border border-white/5 rounded-2xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Generate Code</h3>
+                <form action="/generate" method="get" class="space-y-4">
+                    <input type="text" name="code" placeholder="Enter custom code" 
+                        class="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:ring-1 focus:ring-white/20 focus:border-white/20">
+                    <button type="submit" 
+                        class="w-full bg-white/5 border border-white/10 text-white font-medium py-3 px-4 rounded-lg hover:bg-white/10 transition-colors">
+                        Create Code
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-black/40 backdrop-blur-sm border border-white/5 rounded-2xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Claim Code</h3>
+                <form action="/claim" method="get" class="space-y-4">
+                    <input type="text" name="code" placeholder="Friend's code" 
+                        class="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:ring-1 focus:ring-white/20 focus:border-white/20">
+                    <button type="submit" 
+                        class="w-full bg-white/5 border border-white/10 text-white font-medium py-3 px-4 rounded-lg hover:bg-white/10 transition-colors">
+                        Redeem
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<%- include('./components/page-scripts') %>

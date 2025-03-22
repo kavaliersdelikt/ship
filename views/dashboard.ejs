@@ -1,0 +1,242 @@
+<%- include('./components/layout') %>
+
+<main class="flex-grow container mx-auto px-4 py-8">
+    
+    
+   
+<% if (req.query.err && req.query.err == "none") { %>
+<div class="my-4 rounded-full shadow-sm border border-white/10 px-3 py-2 pt-2.5">
+<span class="text-white text-xs mt-0.5">
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 mb-0.5 text-indigo-300 rounded-full shadow-sm bg-indigo-500/15 p-1.5 mr-2.5 inline-flex">
+  <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+</svg>
+Action completed - daily rewards (150 SH) have been claimed! <code style="font-family: 'JetBrains Mono'" class="text-white/60">&nbsp;• action ID <%= Math.random().toString(36).substring(2, 8) %></code>
+</span>
+</div>
+<% } %>
+
+<% if (req.query.err && req.query.err == "CREATED") { %>
+<div class="my-4 rounded-full shadow-sm border border-white/10 px-3 py-2 pt-2.5">
+<span class="text-white text-xs mt-0.5">
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 mb-0.5 text-indigo-300 rounded-full shadow-sm bg-indigo-500/15 p-1.5 mr-2.5 inline-flex">
+  <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+</svg>
+Action completed - provisioning has started for your server, it may take up to 5 minutes to complete. <code style="font-family: 'JetBrains Mono'" class="text-white/60">&nbsp;• action ID <%= Math.random().toString(36).substring(2, 8) %></code>
+</span>
+</div>
+<% } %>
+
+<% if (req.query.err && req.query.err == "MODIFIED") { %>
+<div class="my-4 rounded-full shadow-sm border border-white/10 px-3 py-2 pt-2.5">
+<span class="text-white text-xs mt-0.5">
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 mb-0.5 text-indigo-300 rounded-full shadow-sm bg-indigo-500/15 p-1.5 mr-2.5 inline-flex">
+  <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+</svg>
+Action completed - the server's resources have been modified. <code style="font-family: 'JetBrains Mono'" class="text-white/60">&nbsp;• action ID <%= Math.random().toString(36).substring(2, 8) %></code>
+</span>
+</div>
+<% } %>
+
+<% if (req.query.err && req.query.err == "DELETED") { %>
+<div class="my-4 rounded-full shadow-sm border border-white/10 px-3 py-2 pt-2.5">
+<span class="text-white text-xs mt-0.5">
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 mb-0.5 text-indigo-300 rounded-full shadow-sm bg-indigo-500/15 p-1.5 mr-2.5 inline-flex">
+  <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+</svg>
+Action completed - the server has been deleted. <code style="font-family: 'JetBrains Mono'" class="text-white/60">&nbsp;• action ID <%= Math.random().toString(36).substring(2, 8) %></code>
+</span>
+</div>
+<% } %>
+
+<% if (req.query.err && req.query.err == "PTERODACTYL") { %>
+    <div class="mb-4 rounded-lg bg-amber-500/10 p-4">
+        <div class="flex items-center gap-3">
+            <div class="text-amber-400">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                </svg>
+            </div>
+            <p class="text-sm font-medium text-amber-400">This location has no available capacity.</p>
+        </div>
+    </div>
+<% } %>
+
+<%
+let ram = 0;
+let disk = 0;
+let cpu = 0;
+let servers = pterodactyl.relationships.servers.data.length;
+for (let i = 0, len = pterodactyl.relationships.servers.data.length; i < len; i++) {
+   ram = ram + (typeof pterodactyl.relationships.servers.data[i].attributes.limits.memory == "number" ? pterodactyl.relationships.servers.data[i].attributes.limits.memory : 0);
+   disk = disk + (typeof pterodactyl.relationships.servers.data[i].attributes.limits.disk == "number" ? pterodactyl.relationships.servers.data[i].attributes.limits.disk : 0);
+   cpu = cpu + (typeof pterodactyl.relationships.servers.data[i].attributes.limits.cpu == "number" ? pterodactyl.relationships.servers.data[i].attributes.limits.cpu : 0);
+}
+%>
+
+
+<div class="grid grid-cols-3 gap-6">
+
+  
+  <div class="col-span-2 p-6 bg-white/5 rounded-xl border border-white/5 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-5">
+      <div class="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500 rounded-full blur-3xl"></div>
+    </div>
+    <div class="relative flex flex-col h-full justify-between">
+      <div>
+        <div class="flex items-center gap-3 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-indigo-400">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+          </svg>
+          <h2 class="text-lg font-semibold text-white">Welcome back!</h2>
+        </div>
+        <p class="text-white/70 text-sm leading-relaxed">
+          Hey <span class="text-indigo-400 font-medium"><%= req.session.userinfo.username %></span>, manage your servers and scale resources from your dashboard.
+        </p>
+      </div>
+      <a href="/servers/new" class="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-indigo-500 hover:bg-indigo-400 rounded-lg transition-all duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+          <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+        </svg>
+        Create New Server
+      </a>
+    </div>
+  </div>
+
+  
+  <div class="p-6 bg-white/5 rounded-xl border border-white/5">
+    <h3 class="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+    <div class="space-y-3">
+      <a href="/servers" class="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-indigo-400">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008z" />
+        </svg>
+        View All Servers
+      </a>
+      <a href="/account" class="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-indigo-400">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        Account Settings
+      </a>
+    </div>
+  </div>
+
+  
+  <div class="col-span-3 grid grid-cols-4 gap-6">
+    
+    <div class="p-6 bg-white/5 rounded-xl border border-white/5">
+      <div class="flex items-center gap-3 mb-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-indigo-400">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
+        </svg>
+        <span class="text-white/70 font-medium">Memory</span>
+      </div>
+      <div class="text-2xl font-semibold text-white">
+        <%= (packages.ram/1024 + extraresources.ram/1024 - ram/1024).toFixed(2) %> <span class="text-lg text-white/60">GiB</span>
+      </div>
+    </div>
+
+    
+    <div class="p-6 bg-white/5 rounded-xl border border-white/5">
+      <div class="flex items-center gap-3 mb-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-indigo-400">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z" />
+        </svg>
+        <span class="text-white/70 font-medium">CPU</span>
+      </div>
+      <div class="text-2xl font-semibold text-white">
+        <%= (packages.cpu + extraresources.cpu - cpu) %> <span class="text-lg text-white/60">%</span>
+      </div>
+    </div>
+
+    
+    <div class="p-6 bg-white/5 rounded-xl border border-white/5">
+      <div class="flex items-center gap-3 mb-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-indigo-400">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+        </svg>
+        <span class="text-white/70 font-medium">Storage</span>
+      </div>
+      <div class="text-2xl font-semibold text-white">
+        <%= (packages.disk/1024 + extraresources.disk/1024 - disk/1024).toFixed(2) %> <span class="text-lg text-white/60">GiB</span>
+      </div>
+    </div>
+
+    
+    <div class="p-6 bg-white/5 rounded-xl border border-white/5">
+      <div class="flex items-center gap-3 mb-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-indigo-400">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008z" />
+        </svg>
+        <span class="text-white/70 font-medium">Server Slots</span>
+      </div>
+      <div class="text-2xl font-semibold text-white">
+        <%= (packages.servers + extraresources.servers - servers) %> <span class="text-lg text-white/60">slots</span>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="col-span-3 grid grid-cols-2 gap-6">
+    
+    <div class="p-6 bg-white/5 rounded-xl border border-white/5">
+      <h3 class="text-lg font-semibold text-white mb-4">System Status</h3>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+          <div class="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-emerald-400">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 017.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 011.06 0z" />
+            </svg>
+            <span class="text-white/70">Game Panel</span>
+          </div>
+          <span class="px-2 py-1 text-xs font-medium bg-emerald-500/10 text-emerald-400 rounded-full">Online</span>
+        </div>
+        <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+          <div class="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-emerald-400">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008z" />
+            </svg>
+            <span class="text-white/70">Node Status</span>
+          </div>
+          <span class="px-2 py-1 text-xs font-medium bg-emerald-500/10 text-emerald-400 rounded-full">Operational</span>
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="p-6 bg-white/5 rounded-xl border border-white/5">
+      <h3 class="text-lg font-semibold text-white mb-4">Latest Updates</h3>
+      <div class="space-y-4">
+        <div class="p-3 bg-white/5 rounded-lg">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-1 text-xs font-medium bg-indigo-500/10 text-indigo-300 rounded-full">New</span>
+            <h4 class="text-white/90 font-medium">Performance Improvements</h4>
+          </div>
+          <p class="text-sm text-white/60 mt-2">Optimized server allocation system for faster deployments</p>
+          <span class="text-xs text-white/40 mt-2 block">October 12, 2023</span>
+        </div>
+        <div class="p-3 bg-white/5 rounded-lg">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-1 text-xs font-medium bg-emerald-500/10 text-emerald-400 rounded-full">Update</span>
+            <h4 class="text-white/90 font-medium">New Location Added</h4>
+          </div>
+          <p class="text-sm text-white/60 mt-2">Added new server location in Amsterdam, Netherlands</p>
+          <span class="text-xs text-white/40 mt-2 block">October 10, 2023</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if (packages.ram/1024 + extraresources.ram/1024 - ram/1024 < 0) { %>
+    <div class="mt-6 p-4 border-l-4 bg-amber-600/15 border-amber-600 rounded-r-2xl">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <span class="text-amber-400 font-semibold">Your resources are somehow below zero. Please <a href="/updateinfo" class="text-amber-300">click here</a> to fix it or your servers could get suspended. If that doesn't work, try editing your servers to fix it.</span>
+            </div>
+        </div>
+    </div>
+<% } %>
+    
+</main>
+<%- include('./components/page-scripts') %>

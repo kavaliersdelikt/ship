@@ -4,7 +4,7 @@
 
 Ship is a high-performance client area for the Pterodactyl Panel that allows your users to create, manage and upgrade their servers through an intuitive interface. It was previously sold on Builtbybit, I now decided to make it open source.
 
-# ⭐ Please star this repository for updates.
+# ⭐ Please star this repository.
 
 
 ## Quick Start Guide
